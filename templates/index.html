@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analisis Sentimen - FinBERT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <main class="main-content">
+            <header class="app-header">
+                <h1>Analisis Sentimen Teks</h1>
+                <p>Klasifikasi teks otomatis menggunakan Deep Learning</p>
+                <div class="header-description" style="margin-top: 20px; padding: 20px; background-color: rgba(255,255,255,0.8); border: 2px dashed #3B82F6; border-radius: 12px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0; background-color: white;">
+                        <img src="{{ url_for('static', filename='images/berti.png') }}" alt="Berti Mascot" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="text-align: left;">
+                        <h3 style="margin: 0 0 6px 0; color: #1E293B; font-size: 18px;">Halo! Aku Berti ✌️</h3>
+                        <p style="color: #475569; font-size: 14px; line-height: 1.5; margin: 0;">Aku adalah asisten AI kamu! Bingung teks berita atau opini ini positif, negatif, atau netral? Ketik aja di bawah, nanti Berti bakal pakai kekuatan <strong>FinBERT</strong> buat bantu kamu analisis teksnya dengan cepat! ✨</p>
+                    </div>
+                </div>
+            </header>
+
+            <section class="card form-card">
+                <form action="/predict" method="POST">
+                    <label for="text-input">Masukkan Teks Analisis</label>
+                    <textarea 
+                        id="text-input"
+                        name="text" 
+                        rows="5" 
+                        placeholder="Ketik atau tempel teks/kalimat di sini untuk dianalisis..." 
+                        required>{{ input_text }}</textarea>
+                    <button type="submit" class="btn-submit">Mulai Analisis</button>
+                </form>
+            </section>
+
+            {% if result %}
+            <section class="card result-card">
+                <h2>Hasil Prediksi</h2>
+                <div class="sentiment-badge">
+                    <span class="result-text">{{ result }}</span>
+                </div>
+
+                {% if breakdown %}
+                <div class="breakdown-container">
+                    <h3>Distribusi Probabilitas Kelas:</h3>
+                    <div class="chart-wrapper">
+                        {% for label, prob in breakdown.items() %}
+                        <div class="chart-row">
+                            <div class="chart-label">
+                                <strong>{{ label }}</strong>
+                                <span>{{ "%.2f"|format(prob * 100) }}%</span>
+                            </div>
+                            <div class="progress-bar-background">
+                                <div class="progress-bar-fill" style="width: {{ prob * 100 }}%;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+            {% endif %}
+        </main>
+
+        <aside class="sidebar-info">
+            <div class="card info-card">
+                <h2>Spesifikasi & Info Model</h2>
+                <div class="model-badge">FinBERT Model</div>
+                
+                <p class="info-desc">
+                    Aplikasi ini menggunakan model <strong>FinBERT</strong> (berbasis arsitektur Transformer/BERT) yang dilatih khusus (fine-tuned) untuk domain pemrosesan bahasa alami. Model ini sangat akurat dalam menangkap konteks kalimat dan hubungan antar kata yang kompleks.
+                </p>
+
+                <hr class="divider">
+
+                <h3>Alur & Arsitektur Pipeline:</h3>
+                <ol class="pipeline-list">
+                    <li>
+                        <strong>Teks Preprocessing & Tokenization</strong>
+                        <p>Teks mentah langsung diproses oleh <code>AutoTokenizer</code> dari HuggingFace, yang otomatis melakukan <em>subword tokenization</em>, penambahan special tokens (CLS, SEP), padding, dan truncation.</p>
+                    </li>
+                    <li>
+                        <strong>Transformer Encoder (FinBERT)</strong>
+                        <p>Sekuens token dimasukkan ke dalam layer-layer Transformer yang menggunakan mekanisme <em>Self-Attention</em> untuk memahami makna kalimat secara utuh dua arah (bidirectional).</p>
+                    </li>
+                    <li>
+                        <strong>Sequence Classification Head</strong>
+                        <p>Representasi vektor akhir dari token [CLS] (yang merangkum makna seluruh teks) dilewatkan ke layer Dense (Linear) untuk dipetakan ke dalam logits klasifikasi akhir.</p>
+                    </li>
+                    <li>
+                        <strong>Softmax Activation</strong>
+                        <p>Logits dikonversi menjadi persentase probabilitas menggunakan fungsi Softmax untuk menghasilkan prediksi kelas akhir (negatif/netral/positif).</p>
+                    </li>
+                </ol>
+            </div>
+        </aside>
+
+    </div>
+</body>
+</html>
